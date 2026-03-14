@@ -28,7 +28,7 @@ app.use((req, res) => {
   });
 });
 
-app.listen(port, () => {
+app.listen(port, "0.0.0.0", () => {
   connectDB();
-  console.log("Example app listening on port " + port);
+  console.log(`Server is running on port ${port}`);
 });
