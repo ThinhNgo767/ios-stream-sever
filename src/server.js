@@ -6,7 +6,13 @@ const cors = require("cors");
 const { connectDB } = require("../utils/conect.mongo");
 const routers = require("../router/index");
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ["https://ksc88.net"],
+    credentials: true,
+  }),
+);
+
 app.use(express.json()); // Để parse JSON body từ ReactJS
 app.use(express.urlencoded({ extended: true }));
 
