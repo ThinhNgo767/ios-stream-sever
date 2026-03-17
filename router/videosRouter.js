@@ -11,13 +11,16 @@ videosRouter.use(authenticateToken);
 videosRouter.get("/koreanbj", async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
+  const names = req.query.anchor;
   const skip = (page - 1) * limit;
 
+  const query = names.length ? { anchor: { $in: names.split(",") } } : {};
+
   try {
-    const totalItems = await db.videos_kbj.countDocuments();
+    const totalItems = await db.videos_kbj.countDocuments(query);
     const totalPages = Math.ceil(totalItems / limit);
 
-    const videos = await getDataFromMongoDB(db.videos_kbj, {}, null, {
+    const videos = await getDataFromMongoDB(db.videos_kbj, query, null, {
       limit,
       skip,
     });
@@ -25,12 +28,20 @@ videosRouter.get("/koreanbj", async (req, res) => {
     const infoVideos = videos.map((v) => {
       return { id: v.id, thumb: v.thumbUrl, tag: v.tag, anchor: v.anchor };
     });
+    const kbjs = await db.videos_kbj.find({}).toArray();
+
+    const uniqueAnchor = [
+      ...new Map(
+        kbjs.map((item) => [item.anchor, { id: item.id, anchor: item.anchor }]),
+      ).values(),
+    ];
 
     return res.status(200).json({
       currentPage: page,
       totalPages: totalPages,
       totalItems: totalItems,
       infoVideos: infoVideos,
+      anchorsName: uniqueAnchor,
     });
   } catch (error) {
     console.error("❌ Lỗi phân trang:", err);
@@ -54,6 +65,7 @@ videosRouter.get("/koreanbj/:id", async (req, res) => {
     res.status(200).json({
       message: "Get successfully",
       url: video.videoUrl,
+      thumb: video.thumbUrl,
     });
   } catch (err) {
     res.status(500).json({
@@ -78,14 +90,20 @@ videosRouter.get("/realistic", async (req, res) => {
     });
 
     const infoVideos = videos.map((v) => {
-      return { id: v.id, thumb: v.thumbUrl, tag: v.category, anchor: v.anchor };
+      return {
+        id: v.id,
+        name: v.fileName,
+        thumb: v.thumbUrl,
+        tag: v.category,
+        anchor: v.anchor,
+      };
     });
 
     return res.status(200).json({
       currentPage: page,
       totalPages: totalPages,
       totalItems: totalItems,
-      videos: infoVideos,
+      infoVideos: infoVideos,
     });
   } catch (error) {
     console.error("❌ Lỗi phân trang:", err);
@@ -109,6 +127,7 @@ videosRouter.get("/realistic/:id", async (req, res) => {
     res.status(200).json({
       message: "Get successfully",
       url: video.videoUrl,
+      thumb: video.thumbUrl,
     });
   } catch (err) {
     res.status(500).json({

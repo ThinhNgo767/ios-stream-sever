@@ -31,6 +31,8 @@ authenticateRouter.post("/sig-in", async (req, res) => {
 
     const { _id, userId, role, key, tokenVersion } = existingUser;
 
+    await db.users.updateOne({ userId: userId }, { $set: { isActive: true } });
+
     const payload = {
       _id,
       userId,
@@ -60,22 +62,19 @@ authenticateRouter.post("/sig-in", async (req, res) => {
 authenticateRouter.get("/me", authenticateToken, async (req, res) => {
   const { _id } = req.user;
 
-  const user = await db.users.findOne(
-    {
-      _id: new ObjectId(String(_id)),
-    },
-    {
-      projection: {
-        password: 0,
-        security_code: 0,
-        resetToken: 0,
-        tokenVersion: 0,
-      },
-    },
-  );
+  const user = await db.users.findOne({
+    _id: new ObjectId(String(_id)),
+  });
 
+  const { username, status, isActive } = user;
+
+  const userInfo = {
+    username,
+    status,
+    isActive,
+  };
   res.json({
-    userInfo: user,
+    userInfo: userInfo,
   });
 });
 
@@ -84,6 +83,7 @@ authenticateRouter.post("/verify-code", authenticateToken, async (req, res) => {
 
   if (!security_code) {
     return res.status(400).json({
+      success: false,
       message: "Body missing data!",
     });
   }
@@ -106,8 +106,7 @@ authenticateRouter.post("/verify-code", authenticateToken, async (req, res) => {
       success: true,
     });
   } catch (error) {
-    console.error(error.message);
-    return res.status(200).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
