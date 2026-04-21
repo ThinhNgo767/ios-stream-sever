@@ -19,6 +19,7 @@ async function connectDB() {
     db.videos_real = database.collection("videos_real");
     db.videos_kbj = database.collection("videos_kbj");
     db.pictures_real = database.collection("pictures_real");
+    db.hashtag = database.collection("hashtag");
   } catch (err) {
     console.error(err);
   }

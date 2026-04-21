@@ -8,7 +8,11 @@ const routers = require("../router/index");
 
 app.use(
   cors({
-    origin: ["https://ksc88.net"],
+    origin: [
+      "https://ksc88.net",
+      "http://localhost:3000",
+      "http://192.168.50.18:3000",
+    ],
     credentials: true,
   }),
 );
